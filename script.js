@@ -7,6 +7,7 @@ let filteredPokemon = [];
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let favoritesVisible = false;
 let currentPokemonData = null;
+let statsChart = null; // Store chart instance for cleanup
 
 // Debounce function
 function debounce(func, delay) {
@@ -17,9 +18,28 @@ function debounce(func, delay) {
     };
 }
 
-// Show/hide loading spinner
+// Show/hide loading spinner with Anime.js
 function toggleLoading(show) {
-    document.getElementById('loading').style.display = show ? 'block' : 'none';
+    const loading = document.getElementById('loading');
+    if (show) {
+        loading.style.display = 'block';
+        anime({
+            targets: loading,
+            opacity: [0, 1],
+            scale: [0.8, 1],
+            duration: 500,
+            easing: 'easeOutQuad'
+        });
+    } else {
+        anime({
+            targets: loading,
+            opacity: 0,
+            scale: 0.8,
+            duration: 300,
+            easing: 'easeInQuad',
+            complete: () => loading.style.display = 'none'
+        });
+    }
 }
 
 // Populate type filter dropdown
@@ -74,6 +94,16 @@ async function fetchPokemon() {
         if (!response.ok) throw new Error('Pokémon not found');
         const data = await response.json();
         displayPokemon(data, container);
+        const card = container.querySelector('.pokemon-card');
+        if (card) {
+            anime({
+                targets: card,
+                opacity: [0, 1],
+                translateY: [50, 0],
+                duration: 800,
+                easing: 'easeOutElastic(1, .8)'
+            });
+        }
     } catch (error) {
         container.innerHTML = `<p>Error: ${error.message}</p>`;
     } finally {
@@ -117,6 +147,7 @@ async function fetchPokemonList() {
             displayPokemon(pokeData, container);
         }
         updatePaginationButtons();
+        animateCards(container);
     } catch (error) {
         container.innerHTML = `<p>Error: ${error.message}</p>`;
     } finally {
@@ -124,12 +155,23 @@ async function fetchPokemonList() {
     }
 }
 
+// Animate cards with Anime.js
+function animateCards(container) {
+    const cards = container.querySelectorAll('.pokemon-card');
+    anime({
+        targets: cards,
+        opacity: [0, 1],
+        translateY: [50, 0],
+        duration: 800,
+        delay: anime.stagger(100),
+        easing: 'easeOutElastic(1, .8)'
+    });
+}
+
 // Display a single Pokémon card with type icons
 function displayPokemon(data, container) {
     const pokemonCard = document.createElement('div');
     pokemonCard.classList.add('pokemon-card');
-    pokemonCard.style.opacity = '0';
-    pokemonCard.style.animation = 'fadeIn 0.5s ease-in forwards';
     pokemonCard.onclick = () => showPokemonDetails(data);
 
     const primaryType = data.types[0].type.name;
@@ -160,8 +202,37 @@ function displayPokemon(data, container) {
     container.appendChild(pokemonCard);
 }
 
-// Show detailed view in modal with favorite option and cry
-function showPokemonDetails(data) {
+// Fetch evolution chain data
+async function fetchEvolutionChain(speciesUrl) {
+    try {
+        const speciesResponse = await fetch(speciesUrl);
+        const speciesData = await speciesResponse.json();
+        const chainResponse = await fetch(speciesData.evolution_chain.url);
+        const chainData = await chainResponse.json();
+        return parseEvolutionChain(chainData.chain);
+    } catch (error) {
+        console.error('Error fetching evolution chain:', error);
+        return [];
+    }
+}
+
+// Parse evolution chain recursively
+function parseEvolutionChain(chain) {
+    const evolutions = [];
+    let current = chain;
+
+    while (current) {
+        const name = current.species.name;
+        const id = current.species.url.split('/').slice(-2, -1)[0];
+        evolutions.push({ name, id });
+        current = current.evolves_to.length > 0 ? current.evolves_to[0] : null; // Take first evolution path
+    }
+
+    return evolutions;
+}
+
+// Show detailed view in modal with stats chart and evolution chain
+async function showPokemonDetails(data) {
     const modal = document.getElementById('pokemonModal');
     const modalContent = document.getElementById('modalContent');
     const favoriteBtn = document.getElementById('favoriteBtn');
@@ -194,6 +265,69 @@ function showPokemonDetails(data) {
     abilities.textContent = 'Abilities: ' + data.abilities.map(ability => ability.ability.name).join(', ');
     modalContent.appendChild(abilities);
 
+    // Stats Chart
+    const canvas = document.createElement('canvas');
+    canvas.classList.add('stats-chart');
+    modalContent.appendChild(canvas);
+
+    if (statsChart) statsChart.destroy(); // Destroy previous chart instance
+    statsChart = new Chart(canvas, {
+        type: 'radar',
+        data: {
+            labels: ['HP', 'Attack', 'Defense', 'Sp. Atk', 'Sp. Def', 'Speed'],
+            datasets: [{
+                label: `${data.name}'s Stats`,
+                data: data.stats.map(stat => stat.base_stat),
+                backgroundColor: 'rgba(255, 203, 5, 0.2)',
+                borderColor: '#ffcb05',
+                borderWidth: 2,
+                pointBackgroundColor: '#ffcb05'
+            }]
+        },
+        options: {
+            scales: {
+                r: {
+                    beginAtZero: true,
+                    max: 255,
+                    ticks: { stepSize: 50, color: '#333' },
+                    grid: { color: '#ccc' },
+                    pointLabels: { color: '#333' }
+                }
+            },
+            plugins: {
+                legend: { labels: { color: '#333' } }
+            }
+        }
+    });
+
+    // Evolution Chain
+    const evolutionDiv = document.createElement('div');
+    evolutionDiv.classList.add('evolution-chain');
+    const evolutions = await fetchEvolutionChain(`https://pokeapi.co/api/v2/pokemon-species/${data.id}/`);
+    for (const evo of evolutions) {
+        const stageDiv = document.createElement('div');
+        stageDiv.classList.add('evolution-stage');
+
+        const evoImg = document.createElement('img');
+        const evoData = await fetch(`https://pokeapi.co/api/v2/pokemon/${evo.id}`).then(res => res.json());
+        evoImg.src = evoData.sprites.front_default || 'https://via.placeholder.com/80';
+        evoImg.alt = evo.name;
+
+        const evoName = document.createElement('p');
+        evoName.textContent = evo.name;
+
+        stageDiv.appendChild(evoImg);
+        stageDiv.appendChild(evoName);
+        stageDiv.onclick = () => {
+            fetch(`https://pokeapi.co/api/v2/pokemon/${evo.id}`)
+                .then(res => res.json())
+                .then(newData => showPokemonDetails(newData));
+        };
+
+        evolutionDiv.appendChild(stageDiv);
+    }
+    modalContent.appendChild(evolutionDiv);
+
     const isFavorite = favorites.some(fav => fav.id === data.id);
     favoriteBtn.textContent = isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
     favoriteBtn.onclick = () => toggleFavorite(data);
@@ -201,9 +335,17 @@ function showPokemonDetails(data) {
     playCryBtn.onclick = () => playPokemonCry(data);
 
     modal.style.display = 'block';
+    anime({
+        targets: '.modal-content',
+        opacity: [0, 1],
+        translateY: [-100, 0],
+        scale: [0.9, 1],
+        duration: 600,
+        easing: 'easeOutBounce'
+    });
 }
 
-// Play Pokémon cry using PokéAPI legacy cries
+// Play Pokémon cry using PokéAPI latest cries
 function playPokemonCry(data) {
     const audio = document.getElementById('pokemonCry');
     const cryUrl = data.cries && data.cries.latest ? data.cries.latest : null;
@@ -248,6 +390,7 @@ async function displayFavorites() {
                 const data = await response.json();
                 displayPokemon(data, container);
             }
+            animateCards(container);
         }
     } catch (error) {
         container.innerHTML = `<p>Error loading favorites: ${error.message}</p>`;
@@ -338,16 +481,34 @@ function toggleDarkMode() {
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
 }
 
-// Modal close functionality
+// Modal close functionality with Anime.js
 document.querySelector('.close').onclick = function() {
-    document.getElementById('pokemonModal').style.display = 'none';
+    if (statsChart) statsChart.destroy(); // Clean up chart
+    anime({
+        targets: '.modal-content',
+        opacity: 0,
+        translateY: -100,
+        scale: 0.9,
+        duration: 400,
+        easing: 'easeInQuad',
+        complete: () => document.getElementById('pokemonModal').style.display = 'none'
+    });
 };
 
 // Close modal when clicking outside
 window.onclick = function(event) {
     const modal = document.getElementById('pokemonModal');
     if (event.target === modal) {
-        modal.style.display = 'none';
+        if (statsChart) statsChart.destroy(); // Clean up chart
+        anime({
+            targets: '.modal-content',
+            opacity: 0,
+            translateY: -100,
+            scale: 0.9,
+            duration: 400,
+            easing: 'easeInQuad',
+            complete: () => modal.style.display = 'none'
+        });
     }
 };
 
@@ -362,6 +523,25 @@ window.onload = function() {
     }
 
     document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+    document.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('mouseenter', () => {
+            anime({
+                targets: btn,
+                scale: 1.05,
+                duration: 300,
+                easing: 'easeOutQuad'
+            });
+        });
+        btn.addEventListener('mouseleave', () => {
+            anime({
+                targets: btn,
+                scale: 1,
+                duration: 300,
+                easing: 'easeInQuad'
+            });
+        });
+    });
 };
 
 document.getElementById('pokemonInput').addEventListener('input', debounce((e) => {

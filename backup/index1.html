@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokédex</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Add Anime.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
+</head>
+<body>
+    <header class="sticky-header">
+        <h1>Pokédex</h1>
+        <button id="darkModeToggle" class="dark-mode-btn">Toggle Dark Mode</button>
+    </header>
+    <main>
+        <div class="search-container">
+            <input type="text" id="pokemonInput" placeholder="Search Pokémon..." autocomplete="off">
+            <div id="suggestions" class="suggestions"></div>
+            <button onclick="fetchPokemon()">Search</button>
+            <select id="typeFilter" onchange="fetchPokemonList()">
+                <option value="">All Types</option>
+            </select>
+            <select id="sortFilter" onchange="fetchPokemonList()">
+                <option value="id-asc">Sort: ID (Low to High)</option>
+                <option value="id-desc">Sort: ID (High to Low)</option>
+                <option value="name-asc">Sort: Name (A-Z)</option>
+                <option value="name-desc">Sort: Name (Z-A)</option>
+            </select>
+        </div>
+        <div id="loading" class="loading">Loading...</div>
+        <section id="pokemonContainer" class="pokemon-container"></section>
+        <div class="pagination">
+            <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+            <button id="nextBtn" onclick="changePage(1)">Next</button>
+        </div>
+        <section class="favorites-section">
+            <div class="favorites-controls">
+                <button id="viewFavoritesBtn" onclick="toggleFavorites()">View Favorites</button>
+                <button id="clearFavoritesBtn" onclick="clearFavorites()" style="display: none;">Clear Favorites</button>
+            </div>
+            <div id="favoritesContainer" class="pokemon-container" style="display: none;"></div>
+        </section>
+    </main>
+    <footer>
+        <p>Powered by <a href="https://pokeapi.co/" target="_blank">PokéAPI</a> | Designed Dibya Prokash Sarkar ❤️</p>
+    </footer>
+
+    <!-- Modal for detailed view -->
+    <div id="pokemonModal" class="modal">
+        <div class="modal-content">
+            <span class="close">×</span>
+            <div id="modalContent"></div>
+            <button id="playCryBtn" class="cry-btn">Play Cry</button>
+            <button id="favoriteBtn" class="favorite-btn">Add to Favorites</button>
+        </div>
+    </div>
+
+    <!-- Audio element for Pokémon cries -->
+    <audio id="pokemonCry" style="display: none;"></audio>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -26,6 +26,10 @@ body::after {
     z-index: -1;
 }
 
+a {
+    color: hotpink;
+}
+
 /* Dark Mode */
 body.dark-mode {
     background: linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%);
@@ -57,7 +61,7 @@ body.dark-mode footer {
 
 /* Explicitly exclude cards from dark mode changes */
 .pokemon-card {
-    background: #fff; /* Base background, overridden by type-specific styles */
+    background: #fff;
     border-radius: 20px;
     padding: 20px;
     text-align: center;
@@ -66,20 +70,21 @@ body.dark-mode footer {
     cursor: pointer;
     position: relative;
     overflow: hidden;
+    opacity: 0;
 }
 
 /* Ensure card styles remain consistent in dark mode */
 body.dark-mode .pokemon-card {
-    background: #fff; /* Base remains unchanged */
-    color: #333; /* Text color stays dark */
+    background: #fff;
+    color: #333;
 }
 
 body.dark-mode .pokemon-card p {
-    color: #555; /* Paragraph text stays consistent */
+    color: #555;
 }
 
 body.dark-mode .pokemon-card h2 {
-    color: #333; /* Header text stays consistent */
+    color: #333;
 }
 
 body.dark-mode .modal-content {
@@ -145,7 +150,6 @@ main {
     border-radius: 30px;
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
     position: relative;
-    animation: fadeIn 0.5s ease-in;
 }
 
 input, select {
@@ -191,7 +195,6 @@ button:hover {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: 25px;
     padding: 20px;
-    animation: fadeIn 0.5s ease-in;
 }
 
 .pokemon-card:hover {
@@ -307,7 +310,6 @@ button:disabled {
     color: #ff4444;
     margin: 20px;
     text-align: center;
-    animation: pulse 1s infinite;
 }
 
 /* Modal Styles */
@@ -320,18 +322,61 @@ button:disabled {
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
+    overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
 .modal-content {
     background: #fff;
-    margin: 10% auto;
-    padding: 25px;
+    margin: 5vh auto; /* Vertical centering with viewport height */
+    padding: 20px;
     border-radius: 20px;
-    width: 90%;
-    max-width: 450px;
+    width: 90%; /* Responsive width */
+    max-width: 600px; /* Slightly wider max for desktop */
+    min-width: 300px; /* Minimum for small screens */
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
     text-align: center;
-    animation: slideIn 0.3s ease-out;
+    opacity: 0;
+}
+
+/* Stats Chart */
+.stats-chart {
+    margin: 20px auto;
+    width: 100%;
+    max-width: 300px; /* Default for larger screens */
+}
+
+/* Evolution Chain */
+.evolution-chain {
+    margin: 20px 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.evolution-stage {
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.evolution-stage:hover {
+    transform: scale(1.1);
+}
+
+.evolution-stage img {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    padding: 10px;
+}
+
+.evolution-stage p {
+    font-size: 0.9rem;
+    text-transform: capitalize;
+    color: #333;
 }
 
 .modal-content img {
@@ -451,19 +496,68 @@ footer {
     margin-top: 40px;
 }
 
-/* Animations */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+/* Responsive Adjustments */
+@media (max-width: 600px) {
+    .modal-content {
+        padding: 15px;
+        width: 95%; /* Nearly full width on small screens */
+        margin: 2vh auto; /* Less margin for smaller screens */
+    }
+
+    .modal-content img {
+        width: 120px; /* Smaller sprite on mobile */
+        height: 120px;
+        padding: 10px;
+    }
+
+    .modal-content h2 {
+        font-size: 1.5rem; /* Slightly smaller title */
+    }
+
+    .modal-content p {
+        font-size: 0.85rem; /* Smaller text */
+    }
+
+    .stats-chart {
+        max-width: 250px; /* Smaller chart on mobile */
+    }
+
+    .evolution-chain {
+        flex-direction: column; /* Stack vertically on small screens */
+        gap: 10px;
+    }
+
+    .evolution-stage img {
+        width: 60px; /* Smaller evolution sprites */
+        height: 60px;
+        padding: 8px;
+    }
+
+    .evolution-stage p {
+        font-size: 0.8rem;
+    }
+
+    .favorite-btn, .cry-btn {
+        padding: 10px 20px; /* Slightly smaller buttons */
+        font-size: 0.9rem;
+    }
+
+    .close {
+        font-size: 25px; /* Smaller close button */
+    }
 }
 
-@keyframes slideIn {
-    from { transform: translateY(-50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
+@media (max-width: 400px) {
+    .modal-content {
+        min-width: 280px; /* Ensure it doesn’t get too narrow */
+    }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    .stats-chart {
+        max-width: 200px; /* Even smaller chart for tiny screens */
+    }
+
+    .modal-content img {
+        width: 100px;
+        height: 100px;
+    }
 }
