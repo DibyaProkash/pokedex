@@ -225,21 +225,29 @@ function parseEvolutionChain(chain) {
         const name = current.species.name;
         const id = current.species.url.split('/').slice(-2, -1)[0];
         evolutions.push({ name, id });
-        current = current.evolves_to.length > 0 ? current.evolves_to[0] : null; // Take first evolution path
+        current = current.evolves_to.length > 0 ? current.evolves_to[0] : null;
     }
 
     return evolutions;
 }
 
-// Show detailed view in modal with stats chart and evolution chain
-async function showPokemonDetails(data) {
-    const modal = document.getElementById('pokemonModal');
+// Update modal content smoothly
+async function updateModalContent(data) {
     const modalContent = document.getElementById('modalContent');
     const favoriteBtn = document.getElementById('favoriteBtn');
     const playCryBtn = document.getElementById('playCryBtn');
-    modalContent.innerHTML = '';
 
     currentPokemonData = data;
+
+    // Fade out current content
+    await anime({
+        targets: modalContent.children,
+        opacity: 0,
+        duration: 300,
+        easing: 'easeOutQuad'
+    }).finished;
+
+    modalContent.innerHTML = ''; // Clear content after fade-out
 
     const img = document.createElement('img');
     img.src = data.sprites.front_default || 'https://via.placeholder.com/150';
@@ -270,7 +278,7 @@ async function showPokemonDetails(data) {
     canvas.classList.add('stats-chart');
     modalContent.appendChild(canvas);
 
-    if (statsChart) statsChart.destroy(); // Destroy previous chart instance
+    if (statsChart) statsChart.destroy();
     statsChart = new Chart(canvas, {
         type: 'radar',
         data: {
@@ -321,20 +329,35 @@ async function showPokemonDetails(data) {
         stageDiv.onclick = () => {
             fetch(`https://pokeapi.co/api/v2/pokemon/${evo.id}`)
                 .then(res => res.json())
-                .then(newData => showPokemonDetails(newData));
+                .then(newData => updateModalContent(newData)); // Update content instead of reloading modal
         };
 
         evolutionDiv.appendChild(stageDiv);
     }
     modalContent.appendChild(evolutionDiv);
 
+    // Update buttons
     const isFavorite = favorites.some(fav => fav.id === data.id);
     favoriteBtn.textContent = isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
     favoriteBtn.onclick = () => toggleFavorite(data);
-
     playCryBtn.onclick = () => playPokemonCry(data);
 
+    // Fade in new content
+    anime({
+        targets: modalContent.children,
+        opacity: [0, 1],
+        translateY: [20, 0],
+        duration: 500,
+        easing: 'easeOutQuad',
+        delay: anime.stagger(100) // Staggered entry for elements
+    });
+}
+
+// Show detailed view in modal (initial open)
+function showPokemonDetails(data) {
+    const modal = document.getElementById('pokemonModal');
     modal.style.display = 'block';
+    updateModalContent(data); // Populate content
     anime({
         targets: '.modal-content',
         opacity: [0, 1],
@@ -370,7 +393,7 @@ function toggleFavorite(data) {
         favorites.splice(index, 1);
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    showPokemonDetails(data);
+    updateModalContent(data); // Refresh modal content
     if (favoritesVisible) displayFavorites();
     updateFavoritesControls();
 }
@@ -483,7 +506,7 @@ function toggleDarkMode() {
 
 // Modal close functionality with Anime.js
 document.querySelector('.close').onclick = function() {
-    if (statsChart) statsChart.destroy(); // Clean up chart
+    if (statsChart) statsChart.destroy();
     anime({
         targets: '.modal-content',
         opacity: 0,
@@ -499,7 +522,7 @@ document.querySelector('.close').onclick = function() {
 window.onclick = function(event) {
     const modal = document.getElementById('pokemonModal');
     if (event.target === modal) {
-        if (statsChart) statsChart.destroy(); // Clean up chart
+        if (statsChart) statsChart.destroy();
         anime({
             targets: '.modal-content',
             opacity: 0,
