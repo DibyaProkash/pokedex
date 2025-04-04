@@ -59,21 +59,22 @@ body.dark-mode footer {
     background: #222;
 }
 
-/* Card Flip Styles */
+/* Card Flip Styles (Updated with Weather and Rarity) */
 .pokemon-card {
     background: #fff;
-    border-radius: 12px; /* Slightly larger for a modern look */
-    padding: 20px; /* More padding for breathing room */
+    border-radius: 12px;
+    padding: 20px;
     text-align: center;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12); /* Softer, deeper shadow */
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     cursor: pointer;
     position: relative;
-    min-height: 280px; /* Adjusted for new layout */
+    min-height: 280px;
     perspective: 1000px;
     overflow: visible;
-    border: 1px solid rgba(0, 0, 0, 0.05); /* Subtle outline */
+    border: 1px solid rgba(0, 0, 0, 0.05);
 }
+
 
 .card-inner {
     position: relative;
@@ -181,6 +182,40 @@ body.dark-mode .shiny-toggle.active {
     background: #4caf50;
 }
 
+body.dark-mode .pokemon-card.rare {
+    animation: rareGlowDark 2s infinite ease-in-out;
+}
+
+body.dark-mode .pokemon-card.legendary {
+    animation: legendaryGlowDark 2s infinite ease-in-out;
+}
+
+@keyframes rareGlowDark {
+    0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 10px rgba(255, 203, 5, 0.6); }
+    50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 203, 5, 0.8); }
+}
+
+@keyframes legendaryGlowDark {
+    0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(255, 105, 180, 0.7); }
+    50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 105, 180, 0.9); }
+}
+
+body.dark-mode .cry-button {
+    background: #4caf50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(76, 175, 80, 0.6);
+    animation: cryGlowDark 2s infinite ease-in-out;
+}
+
+body.dark-mode .cry-button:hover {
+    background: #45a049;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4), 0 0 12px rgba(76, 175, 80, 0.8);
+}
+
+@keyframes cryGlowDark {
+    0%, 100% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 8px rgba(76, 175, 80, 0.6); }
+    50% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 12px rgba(76, 175, 80, 0.8); }
+}
+
 .sticky-header {
     position: sticky;
     top: 0;
@@ -281,6 +316,42 @@ button:hover {
     box-shadow: 0 5px 15px rgba(255, 203, 5, 0.4);
 }
 
+/* Cry Button with Glow */
+.cry-button {
+    position: absolute;
+    top: 10px;
+    left: 10px; /* Opposite shiny toggle */
+    width: 24px;
+    height: 24px;
+    background: #4caf50; /* Green base, can be type-themed */
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 8px rgba(76, 175, 80, 0.5); /* Subtle glow */
+    animation: cryGlow 2s infinite ease-in-out; /* Glowing effect */
+}
+
+.cry-button:hover {
+    background: #45a049; /* Darker green */
+    transform: scale(1.1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 12px rgba(76, 175, 80, 0.7); /* Stronger glow */
+}
+
+.cry-button svg {
+    width: 14px;
+    height: 14px;
+    fill: #fff;
+}
+
+/* Glow Animation for Cry Button */
+@keyframes cryGlow {
+    0%, 100% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 8px rgba(76, 175, 80, 0.5); }
+    50% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 12px rgba(76, 175, 80, 0.7); }
+}
+
 .pokemon-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -293,14 +364,136 @@ button:hover {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18); /* Enhanced hover shadow */
 }
 
+/* Weather Effects (Pseudo-Element Backgrounds) */
 .pokemon-card::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
-    height: 5px;
-    background: inherit;
+    height: 100%;
+    pointer-events: none; /* Ensures clicks pass through */
+    z-index: -1; /* Behind content */
+    opacity: 0.2; /* Subtle effect */
+    border-radius: 12px;
+}
+
+.pokemon-card.fire::before {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.2), rgba(255, 215, 0, 0.1));
+    animation: sparks 3s infinite ease-in-out;
+}
+
+.pokemon-card.water::before {
+    background: linear-gradient(135deg, rgba(99, 144, 240, 0.2), rgba(0, 191, 255, 0.1));
+    animation: raindrops 2s infinite linear;
+}
+
+.pokemon-card.grass::before {
+    background: linear-gradient(135deg, rgba(122, 199, 76, 0.2), rgba(173, 255, 47, 0.1));
+    animation: leaves 4s infinite ease-in-out;
+}
+
+.pokemon-card.electric::before {
+    background: linear-gradient(135deg, rgba(247, 208, 44, 0.2), rgba(255, 255, 102, 0.1));
+    animation: sparks 1.5s infinite ease-in-out;
+}
+
+.pokemon-card.psychic::before {
+    background: linear-gradient(135deg, rgba(249, 85, 135, 0.2), rgba(238, 130, 238, 0.1));
+    animation: glowPulse 3s infinite ease-in-out;
+}
+
+.pokemon-card.ice::before {
+    background: linear-gradient(135deg, rgba(150, 217, 214, 0.2), rgba(240, 255, 255, 0.1));
+    animation: snowflakes 3s infinite linear;
+}
+
+/* Add more types as needed */
+.pokemon-card.dragon::before { animation: glowPulse 3s infinite ease-in-out; }
+.pokemon-card.dark::before { animation: shadowFade 4s infinite ease-in-out; }
+.pokemon-card.fairy::before { animation: sparkle 2s infinite ease-in-out; }
+.pokemon-card.normal::before { animation: none; } /* No effect for normal */
+.pokemon-card.fighting::before { animation: sparks 2s infinite ease-in-out; }
+.pokemon-card.flying::before { animation: clouds 5s infinite linear; }
+.pokemon-card.poison::before { animation: bubbles 3s infinite ease-in-out; }
+.pokemon-card.ground::before { animation: dust 4s infinite ease-in-out; }
+.pokemon-card.rock::before { animation: dust 4s infinite ease-in-out; }
+.pokemon-card.bug::before { animation: leaves 4s infinite ease-in-out; }
+.pokemon-card.ghost::before { animation: shadowFade 3s infinite ease-in-out; }
+.pokemon-card.steel::before { animation: sparks 2s infinite ease-in-out; }
+
+/* Weather Animations */
+@keyframes sparks {
+    0%, 100% { background-position: 0 0; }
+    50% { background-position: 10px 10px; }
+}
+
+@keyframes raindrops {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+}
+
+@keyframes leaves {
+    0%, 100% { transform: translateX(-5px); }
+    50% { transform: translateX(5px); }
+}
+
+@keyframes glowPulse {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.4; }
+}
+
+@keyframes snowflakes {
+    0% { transform: translateY(-50%) translateX(-10px); }
+    100% { transform: translateY(50%) translateX(10px); }
+}
+
+@keyframes shadowFade {
+    0%, 100% { opacity: 0.1; }
+    50% { opacity: 0.3; }
+}
+
+@keyframes sparkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.5; }
+}
+
+@keyframes clouds {
+    0% { transform: translateX(-20px); }
+    100% { transform: translateX(20px); }
+}
+
+@keyframes bubbles {
+    0% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.1); }
+    100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes dust {
+    0%, 100% { opacity: 0.1; transform: translateX(0); }
+    50% { opacity: 0.3; transform: translateX(5px); }
+}
+
+/* .pokemon-card.common {
+
+} */
+
+.pokemon-card.rare {
+    animation: rareGlow 2s infinite ease-in-out;
+}
+
+.pokemon-card.legendary {
+    animation: legendaryGlow 2s infinite ease-in-out;
+}
+
+@keyframes rareGlow {
+    0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 10px rgba(255, 203, 5, 0.5); }
+    50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 20px rgba(255, 203, 5, 0.7); }
+}
+
+@keyframes legendaryGlow {
+    0%, 100% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 15px rgba(255, 105, 180, 0.6); }
+    50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 25px rgba(255, 105, 180, 0.8); }
 }
 
 /* Card Content */
@@ -399,6 +592,8 @@ button:hover {
     height: 14px;
     fill: #fff;
 }
+
+
 
 /* Color Coding for Cards (Enhanced Gradients) */
 .pokemon-card.fire { background: linear-gradient(135deg, #fff5f5, #fddcdc); border-top: 5px solid #ff4444; }

@@ -180,12 +180,14 @@ function animateCards(container) {
     });
 }
 
-// Display a single Pokémon card with flip effect
 function displayPokemon(data, container) {
     console.log('Rendering Pokémon:', data);
 
+    // Create card
     const pokemonCard = document.createElement('div');
     pokemonCard.classList.add('pokemon-card');
+
+    // Add type class
     if (data.types && data.types.length > 0) {
         const primaryType = data.types[0].type.name;
         pokemonCard.classList.add(primaryType);
@@ -193,6 +195,17 @@ function displayPokemon(data, container) {
         console.warn('No types found for:', data);
     }
 
+    // Calculate rarity based on base stat total
+    const baseStatTotal = data.stats.reduce((sum, stat) => sum + stat.base_stat, 0);
+    if (baseStatTotal > 600) {
+        pokemonCard.classList.add('legendary');
+    } else if (baseStatTotal >= 400) {
+        pokemonCard.classList.add('rare');
+    } else {
+        pokemonCard.classList.add('common');
+    }
+
+    // Card structure
     const cardInner = document.createElement('div');
     cardInner.classList.add('card-inner');
 
@@ -209,7 +222,7 @@ function displayPokemon(data, container) {
     // Shiny Toggle
     const shinyToggle = document.createElement('div');
     shinyToggle.classList.add('shiny-toggle');
-    shinyToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.167 1.19-5.916 5.769 1.396 8.136L12 19.897l-7.315 3.846 1.396-8.136L.165 9.208l8.167-1.19L12 .587z"/></svg>'; // Star icon
+    shinyToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.167 1.19-5.916 5.769 1.396 8.136L12 19.897l-7.315 3.846 1.396-8.136L.165 9.208l8.167-1.19L12 .587z"/></svg>';
     let isShiny = false;
     shinyToggle.addEventListener('click', () => {
         isShiny = !isShiny;
@@ -223,6 +236,17 @@ function displayPokemon(data, container) {
         });
     });
     cardFront.appendChild(shinyToggle);
+
+    // Cry Button
+    const cryButton = document.createElement('div');
+    cryButton.classList.add('cry-button');
+    cryButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
+    cryButton.addEventListener('click', () => {
+        const audio = document.getElementById('pokemonCry') || new Audio();
+        audio.src = data.cries?.latest || '';
+        audio.play().catch(error => console.error('Cry playback failed:', error));
+    });
+    cardFront.appendChild(cryButton);
 
     const name = document.createElement('h2');
     name.textContent = data.name || 'Unknown';
@@ -265,6 +289,7 @@ function displayPokemon(data, container) {
     ` : 'No stats available';
     cardBack.appendChild(backStats);
 
+    // Assemble card
     cardInner.appendChild(cardFront);
     cardInner.appendChild(cardBack);
     pokemonCard.appendChild(cardInner);
@@ -289,7 +314,7 @@ function displayPokemon(data, container) {
                 targets: cardInner,
                 rotateY: 0,
                 duration: 600,
-                easing: 'easeOutQuad'
+                easing: 'easeInOutQuad'
             });
             isFlipped = false;
         }
@@ -301,6 +326,7 @@ function displayPokemon(data, container) {
         showPokemonDetails(data);
     });
 
+    // Append to container
     container.appendChild(pokemonCard);
 }
 
