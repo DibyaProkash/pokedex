@@ -206,6 +206,24 @@ function displayPokemon(data, container) {
     cardFront.appendChild(img);
     console.log('Added img to cardFront:', img.outerHTML);
 
+    // Shiny Toggle
+    const shinyToggle = document.createElement('div');
+    shinyToggle.classList.add('shiny-toggle');
+    shinyToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.167 1.19-5.916 5.769 1.396 8.136L12 19.897l-7.315 3.846 1.396-8.136L.165 9.208l8.167-1.19L12 .587z"/></svg>'; // Star icon
+    let isShiny = false;
+    shinyToggle.addEventListener('click', () => {
+        isShiny = !isShiny;
+        shinyToggle.classList.toggle('active', isShiny);
+        img.src = isShiny ? (data.sprites?.front_shiny || img.src) : (data.sprites?.front_default || img.src);
+        anime({
+            targets: img,
+            opacity: [0, 1],
+            duration: 300,
+            easing: 'easeInOutQuad'
+        });
+    });
+    cardFront.appendChild(shinyToggle);
+
     const name = document.createElement('h2');
     name.textContent = data.name || 'Unknown';
     if (data.types) {
@@ -260,7 +278,7 @@ function displayPokemon(data, container) {
                 targets: cardInner,
                 rotateY: 180,
                 duration: 600,
-                easing: 'easeOutQuad'
+                easing: 'easeInOutQuad'
             });
             isFlipped = true;
         }
