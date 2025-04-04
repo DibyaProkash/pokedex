@@ -27,7 +27,7 @@ body::after {
 }
 
 a {
-    color: hotpink;
+    color: palevioletred;
 }
 
 /* Dark Mode */
@@ -59,23 +59,84 @@ body.dark-mode footer {
     background: #222;
 }
 
-/* Explicitly exclude cards from dark mode changes */
+/* Card Flip Styles */
 .pokemon-card {
     background: #fff;
-    border-radius: 20px;
-    padding: 20px;
+    border-radius: 8px;
+    padding: 15px;
     text-align: center;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
     position: relative;
-    overflow: hidden;
-    opacity: 0;
+    min-height: 250px;
+    perspective: 1000px; /* Keep for 3D effect */
+    overflow: visible;
+}
+
+.card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease-in-out; /* Smoother timing */
+}
+
+.card-front, .card-back {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden; /* Ensure backface is hidden */
+    border-radius: 8px;
+    padding: 15px;
+    box-sizing: border-box;
+    transform: translateZ(0); /* Force hardware acceleration */
+}
+
+.card-front {
+    background: inherit; /* Inherits type gradient */
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.card-back {
+    background: #f5f5f5;
+    color: #333;
+    transform: rotateY(180deg);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-back h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.card-back p {
+    font-size: 0.9rem;
+    color: #555;
+    text-align: center;
+    line-height: 1.4;
 }
 
 /* Ensure card styles remain consistent in dark mode */
+/* Dark Mode Adjustments */
 body.dark-mode .pokemon-card {
     background: #fff;
+    color: #333;
+}
+
+body.dark-mode .card-front {
+    background: inherit;
     color: #333;
 }
 
@@ -84,6 +145,11 @@ body.dark-mode .pokemon-card p {
 }
 
 body.dark-mode .pokemon-card h2 {
+    color: #333;
+}
+
+body.dark-mode .card-back {
+    background: #f5f5f5;
     color: #333;
 }
 
@@ -115,6 +181,13 @@ h1 {
     font-size: 2.5rem;
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.completion-tracker {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .dark-mode-btn {
@@ -212,6 +285,7 @@ button:hover {
     background: inherit;
 }
 
+/* Card Content */
 .pokemon-card img {
     width: 130px;
     height: 130px;
@@ -322,17 +396,17 @@ button:disabled {
     height: 100%;
     background: rgba(0, 0, 0, 0.7);
     z-index: 1000;
-    overflow-y: auto; /* Allow scrolling if content overflows */
+    overflow-y: auto;
 }
 
 .modal-content {
     background: #fff;
-    margin: 5vh auto; /* Vertical centering with viewport height */
+    margin: 5vh auto;
     padding: 20px;
     border-radius: 20px;
-    width: 90%; /* Responsive width */
-    max-width: 600px; /* Slightly wider max for desktop */
-    min-width: 300px; /* Minimum for small screens */
+    width: 90%;
+    max-width: 600px;
+    min-width: 300px;
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
     text-align: center;
     opacity: 0;
@@ -342,7 +416,7 @@ button:disabled {
 .stats-chart {
     margin: 20px auto;
     width: 100%;
-    max-width: 300px; /* Default for larger screens */
+    max-width: 300px;
 }
 
 /* Evolution Chain */
@@ -397,7 +471,7 @@ button:disabled {
     transition: color 0.3s;
 }
 
-.close:hover {
+Vitaliy:hover {
     color: #333;
 }
 
@@ -500,35 +574,35 @@ footer {
 @media (max-width: 600px) {
     .modal-content {
         padding: 15px;
-        width: 95%; /* Nearly full width on small screens */
-        margin: 2vh auto; /* Less margin for smaller screens */
+        width: 95%;
+        margin: 2vh auto;
     }
 
     .modal-content img {
-        width: 120px; /* Smaller sprite on mobile */
+        width: 120px;
         height: 120px;
         padding: 10px;
     }
 
     .modal-content h2 {
-        font-size: 1.5rem; /* Slightly smaller title */
+        font-size: 1.5rem;
     }
 
     .modal-content p {
-        font-size: 0.85rem; /* Smaller text */
+        font-size: 0.85rem;
     }
 
     .stats-chart {
-        max-width: 250px; /* Smaller chart on mobile */
+        max-width: 250px;
     }
 
     .evolution-chain {
-        flex-direction: column; /* Stack vertically on small screens */
+        flex-direction: column;
         gap: 10px;
     }
 
     .evolution-stage img {
-        width: 60px; /* Smaller evolution sprites */
+        width: 60px;
         height: 60px;
         padding: 8px;
     }
@@ -538,26 +612,34 @@ footer {
     }
 
     .favorite-btn, .cry-btn {
-        padding: 10px 20px; /* Slightly smaller buttons */
+        padding: 10px 20px;
         font-size: 0.9rem;
     }
 
     .close {
-        font-size: 25px; /* Smaller close button */
+        font-size: 25px;
+    }
+
+    .completion-tracker {
+        font-size: 0.9rem;
     }
 }
 
 @media (max-width: 400px) {
     .modal-content {
-        min-width: 280px; /* Ensure it doesn’t get too narrow */
+        min-width: 280px;
     }
 
     .stats-chart {
-        max-width: 200px; /* Even smaller chart for tiny screens */
+        max-width: 200px;
     }
 
     .modal-content img {
         width: 100px;
         height: 100px;
+    }
+
+    .completion-tracker {
+        font-size: 0.8rem;
     }
 }

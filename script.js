@@ -7,7 +7,9 @@ let filteredPokemon = [];
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let favoritesVisible = false;
 let currentPokemonData = null;
-let statsChart = null; // Store chart instance for cleanup
+let statsChart = null;
+let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) || []);
+const TOTAL_POKEMON = 151;
 
 // Debounce function
 function debounce(func, delay) {
@@ -42,6 +44,13 @@ function toggleLoading(show) {
     }
 }
 
+// Update completion tracker
+function updateCompletionTracker() {
+    const completion = Math.round((viewedPokemon.size / TOTAL_POKEMON) * 100);
+    document.getElementById('completionTracker').textContent = `Pokédex: ${completion}% (${viewedPokemon.size}/${TOTAL_POKEMON})`;
+    localStorage.setItem('viewedPokemon', JSON.stringify([...viewedPokemon]));
+}
+
 // Populate type filter dropdown
 async function populateTypeFilter() {
     const response = await fetch('https://pokeapi.co/api/v2/type');
@@ -69,6 +78,7 @@ async function fetchAllPokemon() {
         }));
         totalPokemon = allPokemon.length;
         filteredPokemon = [...allPokemon];
+        console.log('Fetched all Pokémon:', allPokemon.slice(0, 5));
         fetchPokemonList();
     } catch (error) {
         document.getElementById('pokemonContainer').innerHTML = `<p>Error: ${error.message}</p>`;
@@ -93,6 +103,7 @@ async function fetchPokemon() {
         const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${input}`);
         if (!response.ok) throw new Error('Pokémon not found');
         const data = await response.json();
+        console.log('Fetched single Pokémon:', data);
         displayPokemon(data, container);
         const card = container.querySelector('.pokemon-card');
         if (card) {
@@ -144,6 +155,7 @@ async function fetchPokemonList() {
     try {
         for (const poke of paginatedList) {
             const pokeData = await fetch(poke.url).then(res => res.json());
+            console.log('Fetched Pokémon for list:', pokeData);
             displayPokemon(pokeData, container);
         }
         updatePaginationButtons();
@@ -168,36 +180,108 @@ function animateCards(container) {
     });
 }
 
-// Display a single Pokémon card with type icons
+// Display a single Pokémon card with flip effect
 function displayPokemon(data, container) {
+    console.log('Rendering Pokémon:', data);
+
     const pokemonCard = document.createElement('div');
     pokemonCard.classList.add('pokemon-card');
-    pokemonCard.onclick = () => showPokemonDetails(data);
+    if (data.types && data.types.length > 0) {
+        const primaryType = data.types[0].type.name;
+        pokemonCard.classList.add(primaryType);
+    } else {
+        console.warn('No types found for:', data);
+    }
 
-    const primaryType = data.types[0].type.name;
-    pokemonCard.classList.add(primaryType);
+    const cardInner = document.createElement('div');
+    cardInner.classList.add('card-inner');
+
+    // Front side
+    const cardFront = document.createElement('div');
+    cardFront.classList.add('card-front');
 
     const img = document.createElement('img');
-    img.src = data.sprites.front_default || 'https://via.placeholder.com/130';
-    img.alt = `${data.name} sprite`;
-    pokemonCard.appendChild(img);
+    img.src = data.sprites?.front_default || 'https://via.placeholder.com/130';
+    img.alt = `${data.name || 'Unknown'} sprite`;
+    cardFront.appendChild(img);
+    console.log('Added img to cardFront:', img.outerHTML);
 
     const name = document.createElement('h2');
-    name.textContent = data.name;
-    data.types.forEach(type => {
-        const icon = document.createElement('span');
-        icon.classList.add('type-icon', type.type.name);
-        name.appendChild(icon);
-    });
-    pokemonCard.appendChild(name);
+    name.textContent = data.name || 'Unknown';
+    if (data.types) {
+        data.types.forEach(type => {
+            const icon = document.createElement('span');
+            icon.classList.add('type-icon', type.type.name);
+            name.appendChild(icon);
+        });
+    }
+    cardFront.appendChild(name);
+    console.log('Added name to cardFront:', name.outerHTML);
 
     const types = document.createElement('p');
-    types.textContent = data.types.map(type => type.type.name).join(', ');
-    pokemonCard.appendChild(types);
+    types.textContent = data.types ? data.types.map(type => type.type.name).join(', ') : 'No types';
+    cardFront.appendChild(types);
+    console.log('Added types to cardFront:', types.outerHTML);
 
     const stats = document.createElement('p');
-    stats.textContent = `HP: ${data.stats[0].base_stat} | Atk: ${data.stats[1].base_stat}`;
-    pokemonCard.appendChild(stats);
+    stats.textContent = data.stats ? `HP: ${data.stats[0].base_stat} | Atk: ${data.stats[1].base_stat}` : 'No stats';
+    cardFront.appendChild(stats);
+    console.log('Added stats to cardFront:', stats.outerHTML);
+
+    // Back side
+    const cardBack = document.createElement('div');
+    cardBack.classList.add('card-back');
+
+    const backTitle = document.createElement('h3');
+    backTitle.textContent = `${data.name || 'Unknown'} Stats`;
+    cardBack.appendChild(backTitle);
+
+    const backStats = document.createElement('p');
+    backStats.innerHTML = data.stats ? `
+        HP: ${data.stats[0].base_stat}<br>
+        Attack: ${data.stats[1].base_stat}<br>
+        Defense: ${data.stats[2].base_stat}<br>
+        Sp. Atk: ${data.stats[3].base_stat}<br>
+        Sp. Def: ${data.stats[4].base_stat}<br>
+        Speed: ${data.stats[5].base_stat}
+    ` : 'No stats available';
+    cardBack.appendChild(backStats);
+
+    cardInner.appendChild(cardFront);
+    cardInner.appendChild(cardBack);
+    pokemonCard.appendChild(cardInner);
+    console.log('Final card HTML:', pokemonCard.outerHTML);
+
+    // Flip animation on hover
+    let isFlipped = false;
+    pokemonCard.addEventListener('mouseenter', () => {
+        if (!isFlipped) {
+            anime({
+                targets: cardInner,
+                rotateY: 180,
+                duration: 600,
+                easing: 'easeOutQuad'
+            });
+            isFlipped = true;
+        }
+    });
+    pokemonCard.addEventListener('mouseleave', () => {
+        if (isFlipped) {
+            anime({
+                targets: cardInner,
+                rotateY: 0,
+                duration: 600,
+                easing: 'easeOutQuad'
+            });
+            isFlipped = false;
+        }
+    });
+
+    // Click to open modal
+    pokemonCard.addEventListener('click', (e) => {
+        e.preventDefault();
+        showPokemonDetails(data);
+    });
 
     container.appendChild(pokemonCard);
 }
@@ -237,9 +321,11 @@ async function updateModalContent(data) {
     const favoriteBtn = document.getElementById('favoriteBtn');
     const playCryBtn = document.getElementById('playCryBtn');
 
+    viewedPokemon.add(data.id);
+    updateCompletionTracker();
+
     currentPokemonData = data;
 
-    // Fade out current content
     await anime({
         targets: modalContent.children,
         opacity: 0,
@@ -247,7 +333,7 @@ async function updateModalContent(data) {
         easing: 'easeOutQuad'
     }).finished;
 
-    modalContent.innerHTML = ''; // Clear content after fade-out
+    modalContent.innerHTML = '';
 
     const img = document.createElement('img');
     img.src = data.sprites.front_default || 'https://via.placeholder.com/150';
@@ -273,7 +359,6 @@ async function updateModalContent(data) {
     abilities.textContent = 'Abilities: ' + data.abilities.map(ability => ability.ability.name).join(', ');
     modalContent.appendChild(abilities);
 
-    // Stats Chart
     const canvas = document.createElement('canvas');
     canvas.classList.add('stats-chart');
     modalContent.appendChild(canvas);
@@ -308,7 +393,6 @@ async function updateModalContent(data) {
         }
     });
 
-    // Evolution Chain
     const evolutionDiv = document.createElement('div');
     evolutionDiv.classList.add('evolution-chain');
     const evolutions = await fetchEvolutionChain(`https://pokeapi.co/api/v2/pokemon-species/${data.id}/`);
@@ -329,27 +413,25 @@ async function updateModalContent(data) {
         stageDiv.onclick = () => {
             fetch(`https://pokeapi.co/api/v2/pokemon/${evo.id}`)
                 .then(res => res.json())
-                .then(newData => updateModalContent(newData)); // Update content instead of reloading modal
+                .then(newData => updateModalContent(newData));
         };
 
         evolutionDiv.appendChild(stageDiv);
     }
     modalContent.appendChild(evolutionDiv);
 
-    // Update buttons
     const isFavorite = favorites.some(fav => fav.id === data.id);
     favoriteBtn.textContent = isFavorite ? 'Remove from Favorites' : 'Add to Favorites';
     favoriteBtn.onclick = () => toggleFavorite(data);
     playCryBtn.onclick = () => playPokemonCry(data);
 
-    // Fade in new content
     anime({
         targets: modalContent.children,
         opacity: [0, 1],
         translateY: [20, 0],
         duration: 500,
         easing: 'easeOutQuad',
-        delay: anime.stagger(100) // Staggered entry for elements
+        delay: anime.stagger(100)
     });
 }
 
@@ -357,7 +439,7 @@ async function updateModalContent(data) {
 function showPokemonDetails(data) {
     const modal = document.getElementById('pokemonModal');
     modal.style.display = 'block';
-    updateModalContent(data); // Populate content
+    updateModalContent(data);
     anime({
         targets: '.modal-content',
         opacity: [0, 1],
@@ -393,7 +475,7 @@ function toggleFavorite(data) {
         favorites.splice(index, 1);
     }
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    updateModalContent(data); // Refresh modal content
+    updateModalContent(data);
     if (favoritesVisible) displayFavorites();
     updateFavoritesControls();
 }
@@ -540,6 +622,7 @@ window.onload = function() {
     populateTypeFilter();
     fetchAllPokemon();
     updateFavoritesControls();
+    updateCompletionTracker();
 
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
