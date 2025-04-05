@@ -216,6 +216,14 @@ body.dark-mode .cry-button:hover {
     50% { box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 12px rgba(76, 175, 80, 0.8); }
 }
 
+body.dark-mode .caught-toggle {
+    background: #999;
+}
+
+body.dark-mode .caught-toggle.caught {
+    background: #d32f2f;
+}
+
 .sticky-header {
     position: sticky;
     top: 0;
@@ -234,6 +242,36 @@ h1 {
     font-size: 2.5rem;
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.caught-toggle {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    background: #ccc;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.caught-toggle:hover {
+    transform: scale(1.1);
+}
+
+.caught-toggle.caught {
+    background: #ff4444; /* Poké Ball red */
+}
+
+.caught-toggle svg {
+    width: 14px;
+    height: 14px;
+    fill: #fff;
 }
 
 .completion-tracker {

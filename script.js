@@ -9,6 +9,7 @@ let favoritesVisible = false;
 let currentPokemonData = null;
 let statsChart = null;
 let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) || []);
+let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []); // Define globally
 const TOTAL_POKEMON = 151;
 
 // Debounce function
@@ -44,10 +45,10 @@ function toggleLoading(show) {
     }
 }
 
-// Update completion tracker
+// Update completion tracker to include caught status
 function updateCompletionTracker() {
-    const completion = Math.round((viewedPokemon.size / TOTAL_POKEMON) * 100);
-    document.getElementById('completionTracker').textContent = `Pokédex: ${completion}% (${viewedPokemon.size}/${TOTAL_POKEMON})`;
+    const completion = Math.round((caughtPokemon.size / TOTAL_POKEMON) * 100);
+    document.getElementById('completionTracker').textContent = `Pokédex: ${completion}% (${caughtPokemon.size}/${TOTAL_POKEMON})`;
     localStorage.setItem('viewedPokemon', JSON.stringify([...viewedPokemon]));
 }
 
@@ -130,6 +131,7 @@ async function fetchPokemonList() {
     container.innerHTML = '';
     toggleLoading(true);
 
+    // Apply type filter
     if (typeFilter) {
         const response = await fetch(`https://pokeapi.co/api/v2/type/${typeFilter}`);
         const data = await response.json();
@@ -142,22 +144,29 @@ async function fetchPokemonList() {
         filteredPokemon = [...allPokemon];
     }
 
+    // Sort the filtered list
     filteredPokemon.sort((a, b) => {
         if (sortFilter === 'name-asc') return a.name.localeCompare(b.name);
         if (sortFilter === 'name-desc') return b.name.localeCompare(a.name);
         if (sortFilter === 'id-desc') return b.id - a.id;
-        return a.id - b.id;
+        return a.id - b.id; // Default id-asc
     });
 
+    // Paginate the sorted list using current offset
     const paginatedList = filteredPokemon.slice(offset, offset + limit);
     totalPokemon = filteredPokemon.length;
 
     try {
-        for (const poke of paginatedList) {
-            const pokeData = await fetch(poke.url).then(res => res.json());
-            console.log('Fetched Pokémon for list:', pokeData);
-            displayPokemon(pokeData, container);
-        }
+        // Fetch all Pokémon data in parallel to preserve order
+        const pokePromises = paginatedList.map(poke => fetch(poke.url).then(res => res.json()));
+        const pokeDataArray = await Promise.all(pokePromises);
+
+        // Display in sorted order
+        pokeDataArray.forEach(data => {
+            console.log('Fetched Pokémon for list:', data);
+            displayPokemon(data, container);
+        });
+
         updatePaginationButtons();
         animateCards(container);
     } catch (error) {
@@ -180,14 +189,12 @@ function animateCards(container) {
     });
 }
 
+// Display a single Pokémon card with flip effect
 function displayPokemon(data, container) {
     console.log('Rendering Pokémon:', data);
 
-    // Create card
     const pokemonCard = document.createElement('div');
     pokemonCard.classList.add('pokemon-card');
-
-    // Add type class
     if (data.types && data.types.length > 0) {
         const primaryType = data.types[0].type.name;
         pokemonCard.classList.add(primaryType);
@@ -205,7 +212,6 @@ function displayPokemon(data, container) {
         pokemonCard.classList.add('common');
     }
 
-    // Card structure
     const cardInner = document.createElement('div');
     cardInner.classList.add('card-inner');
 
@@ -248,6 +254,23 @@ function displayPokemon(data, container) {
     });
     cardFront.appendChild(cryButton);
 
+    // Caught Toggle
+    const caughtToggle = document.createElement('div');
+    caughtToggle.classList.add('caught-toggle');
+    caughtToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>'; // Poké Ball icon
+    caughtToggle.classList.toggle('caught', caughtPokemon.has(data.id));
+    caughtToggle.addEventListener('click', () => {
+        if (caughtPokemon.has(data.id)) {
+            caughtPokemon.delete(data.id);
+        } else {
+            caughtPokemon.add(data.id);
+        }
+        caughtToggle.classList.toggle('caught');
+        localStorage.setItem('caughtPokemon', JSON.stringify([...caughtPokemon]));
+        updateCompletionTracker();
+    });
+    cardFront.appendChild(caughtToggle);
+
     const name = document.createElement('h2');
     name.textContent = data.name || 'Unknown';
     if (data.types) {
@@ -289,7 +312,6 @@ function displayPokemon(data, container) {
     ` : 'No stats available';
     cardBack.appendChild(backStats);
 
-    // Assemble card
     cardInner.appendChild(cardFront);
     cardInner.appendChild(cardBack);
     pokemonCard.appendChild(cardInner);
@@ -326,7 +348,6 @@ function displayPokemon(data, container) {
         showPokemonDetails(data);
     });
 
-    // Append to container
     container.appendChild(pokemonCard);
 }
 
@@ -673,6 +694,16 @@ window.onload = function() {
     }
 
     document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
+
+    // Reset offset and fetch list when sort or type filter changes
+    document.getElementById('sortFilter').addEventListener('change', () => {
+        offset = 0;
+        fetchPokemonList();
+    });
+    document.getElementById('typeFilter').addEventListener('change', () => {
+        offset = 0;
+        fetchPokemonList();
+    });
 
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('mouseenter', () => {
