@@ -13,14 +13,20 @@ let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) ||
 let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []);
 const TOTAL_POKEMON = 151;
 let encounterTimer = null;
-let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true'; // New: track music state
+let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true'; // Persist play state
+let selectedTrack = localStorage.getItem('selectedTrack') || 'off'; // Persist selected track
 
 
-// const volumeSlider = document.getElementById('musicVolume');
-// if (volumeSlider) {
-//     music.volume = volumeSlider.value;
-//     volumeSlider.addEventListener('input', () => music.volume = volumeSlider.value);
-// }
+// Music track options (URLs or local paths)
+const musicTracks = {
+    'off': '',
+    'title': 'assets/music/title.mp3',
+    'introduction': 'assets/music/introductions.mp3',
+    'littleroot': 'assets/music/littleroot-town.mp3',
+    'hoenn': 'assets/music/hoenn.mp3',
+    'rustboro-city': 'assets/music/rustboro-city.mp3',
+    'gym': 'assets/music/gym.mp3'
+};
 
 // Debounce function
 function debounce(func, delay) {
@@ -847,29 +853,37 @@ window.onload = function() {
         console.warn('Release All Caught button not found in HTML');
     }
 
-    // New: Music toggle logic
+    // New: Music track selection logic
     const music = document.getElementById('backgroundMusic');
-    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
-    if (music && toggleMusicBtn) {
+    const musicSelect = document.getElementById('musicSelect');
+    if (music && musicSelect) {
         // Set initial state
-        toggleMusicBtn.textContent = isMusicPlaying ? 'Mute Music' : 'Play Music';
-        if (isMusicPlaying) {
+        musicSelect.value = selectedTrack;
+        if (selectedTrack !== 'off' && isMusicPlaying) {
+            music.src = musicTracks[selectedTrack];
             music.play().catch(error => console.error('Music playback failed:', error));
         }
 
-        toggleMusicBtn.addEventListener('click', () => {
-            if (isMusicPlaying) {
+        musicSelect.addEventListener('change', () => {
+            selectedTrack = musicSelect.value;
+            localStorage.setItem('selectedTrack', selectedTrack);
+
+            if (selectedTrack === 'off') {
                 music.pause();
-                toggleMusicBtn.textContent = 'Play Music';
+                music.src = '';
+                isMusicPlaying = false;
             } else {
-                music.play().catch(error => console.error('Music playback failed:', error));
-                toggleMusicBtn.textContent = 'Mute Music';
+                music.src = musicTracks[selectedTrack];
+                music.play().catch(error => {
+                    console.error('Music playback failed:', error);
+                    alert('Could not play the selected track.');
+                });
+                isMusicPlaying = true;
             }
-            isMusicPlaying = !isMusicPlaying;
             localStorage.setItem('musicPlaying', isMusicPlaying);
         });
     } else {
-        console.warn('Music or toggle button not found in HTML');
+        console.warn('Music or select element not found in HTML');
     }
 
     document.querySelectorAll('button').forEach(btn => {
