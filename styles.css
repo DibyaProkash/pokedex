@@ -61,7 +61,7 @@ body.dark-mode footer {
 
 /* Card Flip Styles (Updated with Weather and Rarity) */
 .pokemon-card {
-    background: #fff;
+    background: #f9f9f9;
     border-radius: 12px;
     padding: 20px;
     text-align: center;
@@ -73,6 +73,8 @@ body.dark-mode footer {
     perspective: 1000px;
     overflow: visible;
     border: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+    overflow: hidden;
 }
 
 
@@ -224,6 +226,19 @@ body.dark-mode .caught-toggle.caught {
     background: #d32f2f;
 }
 
+body.dark-mode #encounterPopup {
+    background: #333;
+    color: #fff;
+}
+
+body.dark-mode #encounterPopup h3 {
+    color: #fff;
+}
+
+body.dark-mode #catchBtn {
+    background: #d32f2f;
+}
+
 .sticky-header {
     position: sticky;
     top: 0;
@@ -274,11 +289,72 @@ h1 {
     fill: #fff;
 }
 
+/* Container for caught Pokémon */
+#caughtContainer {
+    display: none; /* Hidden by default */
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Larger min width */
+    gap: 25px; /* More breathing room */
+    padding: 25px;
+    max-width: 1200px; /* Optional: cap width for large screens */
+    margin: 0 auto; /* Center it */
+}
+
 .completion-tracker {
     font-size: 1rem;
     font-weight: 600;
     color: #fff;
     text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+#encounterPopup {
+    position: fixed;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    text-align: center;
+}
+
+.encounter-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+#encounterPopup img {
+    width: 100px;
+    height: 100px;
+}
+
+#encounterPopup h3 {
+    margin: 0;
+    font-size: 1.2em;
+    color: #333;
+}
+
+#encounterTimer {
+    margin: 5px 0;
+    font-weight: bold;
+    color: #ff4444;
+}
+
+#catchBtn {
+    background: #ff4444;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#catchBtn:hover {
+    background: #d32f2f;
 }
 
 .dark-mode-btn {

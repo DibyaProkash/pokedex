@@ -6,11 +6,13 @@ let allPokemon = [];
 let filteredPokemon = [];
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let favoritesVisible = false;
+let caughtVisible = false; // New flag for caught Pokémon visibility
 let currentPokemonData = null;
 let statsChart = null;
 let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) || []);
-let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []); // Define globally
+let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []);
 const TOTAL_POKEMON = 151;
+let encounterTimer = null;
 
 // Debounce function
 function debounce(func, delay) {
@@ -131,7 +133,6 @@ async function fetchPokemonList() {
     container.innerHTML = '';
     toggleLoading(true);
 
-    // Apply type filter
     if (typeFilter) {
         const response = await fetch(`https://pokeapi.co/api/v2/type/${typeFilter}`);
         const data = await response.json();
@@ -144,24 +145,20 @@ async function fetchPokemonList() {
         filteredPokemon = [...allPokemon];
     }
 
-    // Sort the filtered list
     filteredPokemon.sort((a, b) => {
         if (sortFilter === 'name-asc') return a.name.localeCompare(b.name);
         if (sortFilter === 'name-desc') return b.name.localeCompare(a.name);
         if (sortFilter === 'id-desc') return b.id - a.id;
-        return a.id - b.id; // Default id-asc
+        return a.id - b.id;
     });
 
-    // Paginate the sorted list using current offset
     const paginatedList = filteredPokemon.slice(offset, offset + limit);
     totalPokemon = filteredPokemon.length;
 
     try {
-        // Fetch all Pokémon data in parallel to preserve order
         const pokePromises = paginatedList.map(poke => fetch(poke.url).then(res => res.json()));
         const pokeDataArray = await Promise.all(pokePromises);
 
-        // Display in sorted order
         pokeDataArray.forEach(data => {
             console.log('Fetched Pokémon for list:', data);
             displayPokemon(data, container);
@@ -202,7 +199,6 @@ function displayPokemon(data, container) {
         console.warn('No types found for:', data);
     }
 
-    // Calculate rarity based on base stat total
     const baseStatTotal = data.stats.reduce((sum, stat) => sum + stat.base_stat, 0);
     if (baseStatTotal > 600) {
         pokemonCard.classList.add('legendary');
@@ -215,7 +211,6 @@ function displayPokemon(data, container) {
     const cardInner = document.createElement('div');
     cardInner.classList.add('card-inner');
 
-    // Front side
     const cardFront = document.createElement('div');
     cardFront.classList.add('card-front');
 
@@ -223,14 +218,13 @@ function displayPokemon(data, container) {
     img.src = data.sprites?.front_default || 'https://via.placeholder.com/130';
     img.alt = `${data.name || 'Unknown'} sprite`;
     cardFront.appendChild(img);
-    console.log('Added img to cardFront:', img.outerHTML);
 
-    // Shiny Toggle
     const shinyToggle = document.createElement('div');
     shinyToggle.classList.add('shiny-toggle');
     shinyToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 .587l3.668 7.431 8.167 1.19-5.916 5.769 1.396 8.136L12 19.897l-7.315 3.846 1.396-8.136L.165 9.208l8.167-1.19L12 .587z"/></svg>';
     let isShiny = false;
-    shinyToggle.addEventListener('click', () => {
+    shinyToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         isShiny = !isShiny;
         shinyToggle.classList.toggle('active', isShiny);
         img.src = isShiny ? (data.sprites?.front_shiny || img.src) : (data.sprites?.front_default || img.src);
@@ -243,23 +237,39 @@ function displayPokemon(data, container) {
     });
     cardFront.appendChild(shinyToggle);
 
-    // Cry Button
     const cryButton = document.createElement('div');
     cryButton.classList.add('cry-button');
-    cryButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>';
-    cryButton.addEventListener('click', () => {
-        const audio = document.getElementById('pokemonCry') || new Audio();
-        audio.src = data.cries?.latest || '';
-        audio.play().catch(error => console.error('Cry playback failed:', error));
+    cryButton.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.73 2.5-2.25 2.5-4.03zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-/<path>-7.86-7-8.77z"/></svg>';
+    cryButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log(`Attempting to play cry for ${data.name}`);
+        const audio = document.getElementById('pokemonCry');
+        if (!audio) {
+            console.error('Audio element #pokemonCry not found in DOM');
+            return;
+        }
+        const cryUrl = data.cries?.latest || '';
+        if (cryUrl) {
+            audio.pause(); // Reset audio state
+            audio.currentTime = 0; // Rewind to start
+            audio.src = cryUrl;
+            audio.play().catch(error => {
+                console.error('Cry playback failed:', error);
+                alert('Could not play the cry for this Pokémon.');
+            });
+        } else {
+            console.warn(`No cry URL for ${data.name}`);
+            alert('No cry available for this Pokémon.');
+        }
     });
     cardFront.appendChild(cryButton);
 
-    // Caught Toggle
     const caughtToggle = document.createElement('div');
     caughtToggle.classList.add('caught-toggle');
-    caughtToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>'; // Poké Ball icon
+    caughtToggle.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6z"/></svg>';
     caughtToggle.classList.toggle('caught', caughtPokemon.has(data.id));
-    caughtToggle.addEventListener('click', () => {
+    caughtToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (caughtPokemon.has(data.id)) {
             caughtPokemon.delete(data.id);
         } else {
@@ -268,6 +278,7 @@ function displayPokemon(data, container) {
         caughtToggle.classList.toggle('caught');
         localStorage.setItem('caughtPokemon', JSON.stringify([...caughtPokemon]));
         updateCompletionTracker();
+        if (caughtVisible) displayCaughtPokemon();
     });
     cardFront.appendChild(caughtToggle);
 
@@ -281,19 +292,15 @@ function displayPokemon(data, container) {
         });
     }
     cardFront.appendChild(name);
-    console.log('Added name to cardFront:', name.outerHTML);
 
     const types = document.createElement('p');
     types.textContent = data.types ? data.types.map(type => type.type.name).join(', ') : 'No types';
     cardFront.appendChild(types);
-    console.log('Added types to cardFront:', types.outerHTML);
 
     const stats = document.createElement('p');
     stats.textContent = data.stats ? `HP: ${data.stats[0].base_stat} | Atk: ${data.stats[1].base_stat}` : 'No stats';
     cardFront.appendChild(stats);
-    console.log('Added stats to cardFront:', stats.outerHTML);
 
-    // Back side
     const cardBack = document.createElement('div');
     cardBack.classList.add('card-back');
 
@@ -315,9 +322,7 @@ function displayPokemon(data, container) {
     cardInner.appendChild(cardFront);
     cardInner.appendChild(cardBack);
     pokemonCard.appendChild(cardInner);
-    console.log('Final card HTML:', pokemonCard.outerHTML);
 
-    // Flip animation on hover
     let isFlipped = false;
     pokemonCard.addEventListener('mouseenter', () => {
         if (!isFlipped) {
@@ -342,13 +347,108 @@ function displayPokemon(data, container) {
         }
     });
 
-    // Click to open modal
     pokemonCard.addEventListener('click', (e) => {
         e.preventDefault();
         showPokemonDetails(data);
     });
 
     container.appendChild(pokemonCard);
+}
+
+
+// Start wild Pokémon encounter
+function startWildEncounter() {
+    if (encounterTimer) clearInterval(encounterTimer);
+
+    const encounterPopup = document.createElement('div');
+    encounterPopup.id = 'encounterPopup';
+    document.body.appendChild(encounterPopup);
+
+    const randomPokemon = allPokemon[Math.floor(Math.random() * allPokemon.length)];
+    fetch(randomPokemon.url)
+        .then(res => res.json())
+        .then(data => {
+            encounterPopup.innerHTML = `
+                <div class="encounter-content">
+                    <h3>A wild ${data.name} appeared!</h3>
+                    <img src="${data.sprites.front_default}" alt="${data.name}">
+                    <p id="encounterTimer">Time left: 10s</p>
+                    <button id="catchBtn">Catch</button>
+                </div>
+            `;
+
+            let timeLeft = 10;
+            const timerDisplay = document.getElementById('encounterTimer');
+            encounterTimer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time left: ${timeLeft}s`;
+                if (timeLeft <= 0) {
+                    clearInterval(encounterTimer);
+                    encounterPopup.innerHTML = `<p>The wild ${data.name} fled!</p>`;
+                    setTimeout(() => encounterPopup.remove(), 2000);
+                }
+            }, 1000);
+
+            document.getElementById('catchBtn').addEventListener('click', () => {
+                clearInterval(encounterTimer);
+                caughtPokemon.add(data.id);
+                localStorage.setItem('caughtPokemon', JSON.stringify([...caughtPokemon]));
+                updateCompletionTracker();
+                encounterPopup.innerHTML = `<p>You caught ${data.name}!</p>`;
+                setTimeout(() => encounterPopup.remove(), 2000);
+                if (caughtVisible) displayCaughtPokemon(); // Refresh caught list if visible
+            });
+
+            anime({
+                targets: '#encounterPopup',
+                opacity: [0, 1],
+                translateY: [-50, 0],
+                duration: 500,
+                easing: 'easeOutQuad'
+            });
+        });
+}
+
+// Display caught Pokémon
+async function displayCaughtPokemon() {
+    const container = document.getElementById('caughtContainer');
+    container.innerHTML = '';
+    toggleLoading(true);
+
+    try {
+        if (caughtPokemon.size === 0) {
+            container.innerHTML = '<p>No Pokémon caught yet!</p>';
+        } else {
+            const caughtArray = Array.from(caughtPokemon);
+            for (const id of caughtArray) {
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+                const data = await response.json();
+                displayPokemon(data, container);
+            }
+            animateCards(container);
+        }
+    } catch (error) {
+        container.innerHTML = `<p>Error loading caught Pokémon: ${error.message}</p>`;
+    } finally {
+        toggleLoading(false);
+    }
+}
+
+// Toggle caught Pokémon visibility
+function toggleCaughtPokemon() {
+    const container = document.getElementById('caughtContainer');
+    const btn = document.getElementById('viewCaughtBtn');
+    caughtVisible = !caughtVisible;
+    container.style.display = caughtVisible ? 'grid' : 'none';
+    btn.textContent = caughtVisible ? 'Hide Caught Pokémon' : 'View Caught Pokémon';
+    if (caughtVisible) displayCaughtPokemon();
+    updateCaughtControls();
+}
+
+// Update caught controls visibility
+function updateCaughtControls() {
+    const viewBtn = document.getElementById('viewCaughtBtn');
+    viewBtn.style.display = caughtPokemon.size > 0 || !caughtVisible ? 'inline-block' : 'none';
 }
 
 // Fetch evolution chain data
@@ -500,7 +600,7 @@ async function updateModalContent(data) {
     });
 }
 
-// Show detailed view in modal (initial open)
+// Show detailed view in modal
 function showPokemonDetails(data) {
     const modal = document.getElementById('pokemonModal');
     modal.style.display = 'block';
@@ -515,7 +615,7 @@ function showPokemonDetails(data) {
     });
 }
 
-// Play Pokémon cry using PokéAPI latest cries
+// Play Pokémon cry
 function playPokemonCry(data) {
     const audio = document.getElementById('pokemonCry');
     const cryUrl = data.cries && data.cries.latest ? data.cries.latest : null;
@@ -651,7 +751,7 @@ function toggleDarkMode() {
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
 }
 
-// Modal close functionality with Anime.js
+// Modal close functionality
 document.querySelector('.close').onclick = function() {
     if (statsChart) statsChart.destroy();
     anime({
@@ -687,7 +787,7 @@ window.onload = function() {
     populateTypeFilter();
     fetchAllPokemon();
     updateFavoritesControls();
-    updateCompletionTracker();
+    updateCaughtControls(); // Call this on load
 
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
@@ -695,7 +795,6 @@ window.onload = function() {
 
     document.getElementById('darkModeToggle').addEventListener('click', toggleDarkMode);
 
-    // Reset offset and fetch list when sort or type filter changes
     document.getElementById('sortFilter').addEventListener('change', () => {
         offset = 0;
         fetchPokemonList();
@@ -704,6 +803,20 @@ window.onload = function() {
         offset = 0;
         fetchPokemonList();
     });
+
+    const encounterBtn = document.getElementById('encounterBtn');
+    if (encounterBtn) {
+        encounterBtn.addEventListener('click', startWildEncounter);
+    } else {
+        console.warn('Encounter button not found in HTML');
+    }
+
+    const viewCaughtBtn = document.getElementById('viewCaughtBtn');
+    if (viewCaughtBtn) {
+        viewCaughtBtn.addEventListener('click', toggleCaughtPokemon);
+    } else {
+        console.warn('View Caught button not found in HTML');
+    }
 
     document.querySelectorAll('button').forEach(btn => {
         btn.addEventListener('mouseenter', () => {

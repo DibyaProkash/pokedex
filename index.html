@@ -31,6 +31,7 @@
                 <option value="name-asc">Sort: Name (A-Z)</option>
                 <option value="name-desc">Sort: Name (Z-A)</option>
             </select>
+            <button id="encounterBtn">Encounter Wild Pokémon</button>
         </div>
         <div id="loading" class="loading">Loading...</div>
         <section id="pokemonContainer" class="pokemon-container"></section>
@@ -42,8 +43,11 @@
             <div class="favorites-controls">
                 <button id="viewFavoritesBtn" onclick="toggleFavorites()">View Favorites</button>
                 <button id="clearFavoritesBtn" onclick="clearFavorites()" style="display: none;">Clear Favorites</button>
+                <button id="viewCaughtBtn">View Caught Pokémon</button> <!-- Add this -->
+                <!-- <button id="encounterBtn">Encounter Wild Pokémon</button> -->
             </div>
             <div id="favoritesContainer" class="pokemon-container" style="display: none;"></div>
+            <div id="caughtContainer"></div>
         </section>
     </main>
     <footer>
