@@ -32,6 +32,8 @@
                 <option value="name-desc">Sort: Name (Z-A)</option>
             </select>
             <button id="encounterBtn">Encounter Wild Pokémon</button>
+            <button id="toggleMusicBtn">Toggle Music</button>
+            <!-- <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="0.5"> -->
         </div>
         <div id="loading" class="loading">Loading...</div>
         <section id="pokemonContainer" class="pokemon-container"></section>
@@ -43,7 +45,8 @@
             <div class="favorites-controls">
                 <button id="viewFavoritesBtn" onclick="toggleFavorites()">View Favorites</button>
                 <button id="clearFavoritesBtn" onclick="clearFavorites()" style="display: none;">Clear Favorites</button>
-                <button id="viewCaughtBtn">View Caught Pokémon</button> <!-- Add this -->
+                <button id="viewCaughtBtn">View Caught Pokémon</button>
+                <button id="releaseAllCaughtBtn">Release All Caught</button>
                 <!-- <button id="encounterBtn">Encounter Wild Pokémon</button> -->
             </div>
             <div id="favoritesContainer" class="pokemon-container" style="display: none;"></div>
@@ -65,7 +68,11 @@
     </div>
 
     <!-- Audio element for Pokémon cries -->
-    <audio id="pokemonCry" style="display: none;"></audio>
+    <audio id="pokemonCry" preload="none"></audio>
+    <audio id="backgroundMusic" loop preload="auto">
+        <source src="assets/music/backgroud-song.mp3" type="audio/mp3">
+        Your browser does not support the audio element.
+    </audio> <!-- Add this -->
 
     <script src="script.js"></script>
 </body>

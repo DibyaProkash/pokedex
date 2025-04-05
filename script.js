@@ -13,6 +13,14 @@ let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) ||
 let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []);
 const TOTAL_POKEMON = 151;
 let encounterTimer = null;
+let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true'; // New: track music state
+
+
+// const volumeSlider = document.getElementById('musicVolume');
+// if (volumeSlider) {
+//     music.volume = volumeSlider.value;
+//     volumeSlider.addEventListener('input', () => music.volume = volumeSlider.value);
+// }
 
 // Debounce function
 function debounce(func, delay) {
@@ -434,7 +442,7 @@ async function displayCaughtPokemon() {
     }
 }
 
-// Toggle caught Pokémon visibility
+// Toggle caught Pokémon visibility (updated)
 function toggleCaughtPokemon() {
     const container = document.getElementById('caughtContainer');
     const btn = document.getElementById('viewCaughtBtn');
@@ -442,13 +450,26 @@ function toggleCaughtPokemon() {
     container.style.display = caughtVisible ? 'grid' : 'none';
     btn.textContent = caughtVisible ? 'Hide Caught Pokémon' : 'View Caught Pokémon';
     if (caughtVisible) displayCaughtPokemon();
-    updateCaughtControls();
+    updateCaughtControls(); // Ensure controls update after toggle
 }
 
-// Update caught controls visibility
+// Update caught controls visibility (modified)
 function updateCaughtControls() {
     const viewBtn = document.getElementById('viewCaughtBtn');
-    viewBtn.style.display = caughtPokemon.size > 0 || !caughtVisible ? 'inline-block' : 'none';
+    const releaseBtn = document.getElementById('releaseAllCaughtBtn');
+    viewBtn.style.display = 'inline-block'; // Always visible
+    releaseBtn.style.display = caughtPokemon.size > 0 && caughtVisible ? 'inline-block' : 'none'; // Show only if caught Pokémon exist and list is visible
+}
+
+// Clear all caught Pokémon
+function releaseAllCaught() {
+    if (confirm('Are you sure you want to release all caught Pokémon?')) {
+        caughtPokemon.clear();
+        localStorage.setItem('caughtPokemon', JSON.stringify([...caughtPokemon]));
+        updateCompletionTracker();
+        if (caughtVisible) displayCaughtPokemon(); // Refresh the list if visible
+        updateCaughtControls();
+    }
 }
 
 // Fetch evolution chain data
@@ -695,7 +716,8 @@ function updateFavoritesControls() {
     const clearBtn = document.getElementById('clearFavoritesBtn');
     const viewBtn = document.getElementById('viewFavoritesBtn');
     clearBtn.style.display = favoritesVisible && favorites.length > 0 ? 'inline-block' : 'none';
-    viewBtn.style.display = favorites.length > 0 || !favoritesVisible ? 'inline-block' : 'none';
+    viewBtn.style.display = 'inline-block';
+    viewBtn.textContent = favoritesVisible ? 'Hide Favorites' : (favorites.length > 0 ? 'View Favorites' : 'View Favorites (Empty)');
 }
 
 // Update pagination buttons
@@ -782,12 +804,12 @@ window.onclick = function(event) {
     }
 };
 
-// Event listeners
+// Event listeners (updated)
 window.onload = function() {
     populateTypeFilter();
     fetchAllPokemon();
     updateFavoritesControls();
-    updateCaughtControls(); // Call this on load
+    updateCaughtControls();
 
     if (localStorage.getItem('darkMode') === 'true') {
         document.body.classList.add('dark-mode');
@@ -816,6 +838,38 @@ window.onload = function() {
         viewCaughtBtn.addEventListener('click', toggleCaughtPokemon);
     } else {
         console.warn('View Caught button not found in HTML');
+    }
+
+    const releaseAllCaughtBtn = document.getElementById('releaseAllCaughtBtn');
+    if (releaseAllCaughtBtn) {
+        releaseAllCaughtBtn.addEventListener('click', releaseAllCaught);
+    } else {
+        console.warn('Release All Caught button not found in HTML');
+    }
+
+    // New: Music toggle logic
+    const music = document.getElementById('backgroundMusic');
+    const toggleMusicBtn = document.getElementById('toggleMusicBtn');
+    if (music && toggleMusicBtn) {
+        // Set initial state
+        toggleMusicBtn.textContent = isMusicPlaying ? 'Mute Music' : 'Play Music';
+        if (isMusicPlaying) {
+            music.play().catch(error => console.error('Music playback failed:', error));
+        }
+
+        toggleMusicBtn.addEventListener('click', () => {
+            if (isMusicPlaying) {
+                music.pause();
+                toggleMusicBtn.textContent = 'Play Music';
+            } else {
+                music.play().catch(error => console.error('Music playback failed:', error));
+                toggleMusicBtn.textContent = 'Mute Music';
+            }
+            isMusicPlaying = !isMusicPlaying;
+            localStorage.setItem('musicPlaying', isMusicPlaying);
+        });
+    } else {
+        console.warn('Music or toggle button not found in HTML');
     }
 
     document.querySelectorAll('button').forEach(btn => {

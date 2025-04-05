@@ -239,6 +239,14 @@ body.dark-mode #catchBtn {
     background: #d32f2f;
 }
 
+body.dark-mode #releaseAllCaughtBtn {
+    background: #d32f2f;
+}
+
+body.dark-mode #toggleMusicBtn {
+    background: #388e3c;
+}
+
 .sticky-header {
     position: sticky;
     top: 0;
@@ -257,6 +265,21 @@ h1 {
     font-size: 2.5rem;
     font-weight: 700;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+#toggleMusicBtn {
+    background: #4caf50; /* Green for music */
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-left: 10px;
+}
+
+#toggleMusicBtn:hover {
+    background: #388e3c;
 }
 
 .caught-toggle {
@@ -297,6 +320,21 @@ h1 {
     padding: 25px;
     max-width: 1200px; /* Optional: cap width for large screens */
     margin: 0 auto; /* Center it */
+}
+
+#releaseAllCaughtBtn {
+    background: #ff4444; /* Red to indicate "release" */
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-left: 10px; /* Space from other buttons */
+}
+
+#releaseAllCaughtBtn:hover {
+    background: #d32f2f;
 }
 
 .completion-tracker {
@@ -919,6 +957,11 @@ Vitaliy:hover {
 
 #viewFavoritesBtn:hover, #clearFavoritesBtn:hover {
     background: #45a049;
+}
+
+#viewFavoritesBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 #clearFavoritesBtn {
