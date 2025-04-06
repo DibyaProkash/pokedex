@@ -5,12 +5,15 @@
 }
 
 body {
-    font-family: 'Poppins', sans-serif;
-    background: linear-gradient(135deg, #e6f0fa 0%, #d1e0ff 100%);
+    font-family: 'Press Start 2P', cursive;
+    background: #e0e0e0;
     color: #333;
     min-height: 100vh;
     line-height: 1.6;
-    position: relative;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     transition: background 0.3s, color 0.3s;
 }
 
@@ -32,8 +35,95 @@ a {
 
 /* Dark Mode */
 body.dark-mode {
-    background: linear-gradient(135deg, #2a2a2a 0%, #4a4a4a 100%);
+    background: #444;
     color: #e0e0e0;
+}
+
+.gameboy-frame {
+    background: #c0c0c0;
+    border: 10px solid #333;
+    border-radius: 15px 15px 50px 15px;
+    padding: 20px;
+    width: 90%;
+    max-width: 900px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.screen {
+    background: #9bbc0f;
+    border: 8px solid #000;
+    border-radius: 5px;
+    padding: 20px;
+    min-height: 500px;
+    overflow-y: auto;
+}
+
+.monochrome {
+    filter: grayscale(100%) brightness(1.2) sepia(0.2);
+    background: #9bbc0f !important;
+}
+
+.gameboy-buttons {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px 40px;
+}
+
+.dpad {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.dpad button {
+    position: absolute;
+    background: #333;
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.dpad-up { top: 0; left: 50%; transform: translateX(-50%); }
+.dpad-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+.dpad-left { left: 0; top: 50%; transform: translateY(-50%); }
+.dpad-right { right: 0; top: 50%; transform: translateY(-50%); }
+
+.ab-buttons {
+    display: flex;
+    gap: 20px;
+}
+
+.button-a, .button-b {
+    width: 40px;
+    height: 40px;
+    background: #8b0000;
+    color: #fff;
+    border-radius: 50%;
+    border: 2px solid #000;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+body.dark-mode .gameboy-frame { background: #444; }
+body.dark-mode .screen { background: #0f380f; }
+
+.sticky-header {
+    position: sticky;
+    top: 0;
+    padding: 20px;
+    background: linear-gradient(90deg, #ff4444, #ff6666);
+    color: #fff;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 900px;
 }
 
 body.dark-mode .sticky-header {
@@ -45,10 +135,16 @@ body.dark-mode .search-container {
     color: #e0e0e0;
 }
 
-body.dark-mode input,
-body.dark-mode select {
+body.dark-mode .search-container input,
+body.dark-mode .search-container select {
     background: #444;
     color: #e0e0e0;
+    border: 1px solid #fff;
+}
+
+body.dark-mode .search-container button {
+    background: #ffcb05;
+    color: #333;
 }
 
 body.dark-mode .loading {
@@ -71,12 +167,10 @@ body.dark-mode footer {
     position: relative;
     min-height: 280px;
     perspective: 1000px;
-    overflow: visible;
+    overflow: hidden;
     border: 1px solid rgba(0, 0, 0, 0.05);
     width: 100%;
-    overflow: hidden;
 }
-
 
 .card-inner {
     position: relative;
@@ -261,10 +355,9 @@ body.dark-mode #toggleMusicBtn {
     align-items: center;
 }
 
-h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+h1 { font-size: 24px; 
+    font-weight: 700; 
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2); 
 }
 
 #toggleMusicBtn {
@@ -283,15 +376,15 @@ h1 {
 }
 
 #musicSelect {
-    background: #4caf50; /* Green for music */
+    background: #4caf50;
     color: #fff;
-    border: none;
+    /* border: none;
     padding: 8px 16px;
     border-radius: 5px;
     cursor: pointer;
     font-size: 1em;
     margin-left: 10px;
-    transition: background 0.3s ease;
+    transition: background 0.3s ease; */
 }
 
 #musicSelect:hover,
@@ -311,6 +404,52 @@ body.dark-mode #musicSelect {
 
 body.dark-mode #musicSelect option {
     background: #444; /* Dark background for options in dark mode */
+    color: #fff;
+}
+
+#playPauseMusicBtn {
+    background: #4caf50;
+    color: #fff;
+    border: none;
+    padding: 6px; 
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-left: 10px;
+    width: 28px; 
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#playPauseMusicBtn:hover {
+    background: #388e3c;
+}
+
+body.dark-mode #musicSelect,
+body.dark-mode #playPauseMusicBtn {
+    background: #388e3c;
+}
+
+#musicSelect option {
+    background: #fff;
+    color: #333;
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+body.dark-mode #musicSelect option {
+    background: #444;
     color: #fff;
 }
 
@@ -451,15 +590,55 @@ main {
 }
 
 .search-container {
-    margin: 40px auto;
     display: flex;
+    flex-wrap: wrap; /* Allow items to wrap to next line */
+    justify-content: center; /* Center items horizontally */
     align-items: center;
-    gap: 15px;
+    gap: 10px; /* Reduced gap for compactness */
     background: rgba(255, 255, 255, 0.9);
-    padding: 15px;
-    border-radius: 30px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    padding: 10px; /* Reduced padding */
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    width: 100%; /* Full width of .screen */
+    max-width: 800px; /* Cap width to fit within Game Boy screen */
+    margin: 20px auto; /* Center vertically */
+    border: 2px solid #000; /* Pixelated retro border */
     position: relative;
+    overflow: hidden; /* Prevent overflow */
+}
+
+.search-container input,
+.search-container select,
+.search-container button {
+    font-family: 'Press Start 2P', cursive;
+    font-size: 10px; /* Smaller font for compactness */
+    padding: 6px 12px; /* Reduced padding */
+    border: 1px solid #000; /* Pixelated border */
+    border-radius: 3px;
+    background: #f5f5f5;
+    color: #333;
+    transition: background 0.3s ease;
+}
+
+.search-container input {
+    flex: 1;
+    min-width: 150px; /* Minimum width before wrapping */
+    max-width: 250px; /* Cap input width */
+}
+
+.search-container select {
+    min-width: 100px; /* Minimum width for dropdowns */
+    max-width: 150px; /* Cap dropdown width */
+}
+
+.search-container button {
+    background: #ffcb05; /* Pokémon yellow */
+    color: #333;
+    padding: 6px 10px; /* Compact buttons */
+}
+
+.search-container button:hover {
+    background: #e6b800;
 }
 
 input, select {
@@ -680,6 +859,36 @@ button:hover {
     50% { box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12), 0 0 25px rgba(255, 105, 180, 0.8); }
 }
 
+button, select, input {
+    font-family: 'Press Start 2P', cursive;
+    padding: 8px 16px;
+    font-size: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+#monoToggle {
+    background: #4caf50;
+    color: #fff;
+    /* margin-left: 10px; */
+}
+
+#monoToggle:hover { background: #388e3c; }
+
+.pokeball-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    background: radial-gradient(circle at 50% 20%, #fff 40%, #ff0000 40%, #ff0000 60%, #000 60%);
+    border: 2px solid #000;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
 /* Card Content */
 .pokemon-card img {
     width: 120px; /* Slightly smaller for balance */
@@ -697,16 +906,16 @@ button:hover {
 }
 
 .pokemon-card h2 {
-    font-size: 1.4rem; /* Larger for emphasis */
-    font-weight: 700; /* Bolder for hierarchy */
+    font-size: 14px; 
+    /* font-weight: 700; 
     text-transform: capitalize;
-    color: #222; /* Darker for contrast */
+    color: #222; 
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px; /* More space for type icons */
+    gap: 8px; 
     margin: 10px 0;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Subtle depth */
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
 }
 
 .pokemon-card p {
@@ -945,25 +1154,27 @@ Vitaliy:hover {
     position: absolute;
     top: 100%;
     left: 0;
-    width: 350px;
+    width: 250px; /* Match input max-width */
     background: #fff;
-    border-radius: 15px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
-    max-height: 220px;
+    border-radius: 3px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    max-height: 200px;
     overflow-y: auto;
     display: none;
     z-index: 10;
+    border: 1px solid #000;
 }
 
 .suggestion-item {
-    padding: 12px;
+    padding: 8px;
     cursor: pointer;
     text-transform: capitalize;
     transition: background 0.2s;
+    font-size: 10px;
 }
 
 .suggestion-item:hover {
-    background: #f5f5f5;
+    background: #e6e6e6;
 }
 
 /* Favorites Section */
@@ -1012,6 +1223,39 @@ footer {
 
 /* Responsive Adjustments */
 @media (max-width: 600px) {
+    .search-container {
+        flex-direction: column; /* Stack vertically on small screens */
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .search-container input,
+    .search-container select,
+    .search-container button {
+        width: 100%; /* Full width for stacked layout */
+        max-width: none; /* Remove max-width constraint */
+        font-size: 10px;
+        padding: 6px;
+    }
+
+    .search-container input {
+        min-width: 100%; /* Full width */
+    }
+
+    .search-container select {
+        min-width: 100%;
+    }
+
+    #playPauseMusicBtn {
+        width: 100%;
+        height: auto;
+        padding: 6px 12px;
+    }
+
+    .suggestions {
+        width: 100%;
+    }
+    
     .modal-content {
         padding: 15px;
         width: 95%;
@@ -1066,6 +1310,17 @@ footer {
 }
 
 @media (max-width: 400px) {
+    .search-container {
+        padding: 6px;
+    }
+
+    .search-container input,
+    .search-container select,
+    .search-container button {
+        font-size: 8px;
+        padding: 4px 8px;
+    }
+    
     .modal-content {
         min-width: 280px;
     }

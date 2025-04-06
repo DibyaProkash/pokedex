@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pokédex</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Anime.js CDN -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.2/anime.min.js"></script>
-    <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -17,55 +15,70 @@
         <span id="completionTracker" class="completion-tracker"></span>
         <button id="darkModeToggle" class="dark-mode-btn">Toggle Dark Mode</button>
     </header>
-    <main>
-        <div class="search-container">
-            <input type="text" id="pokemonInput" placeholder="Search Pokémon..." autocomplete="off">
-            <div id="suggestions" class="suggestions"></div>
-            <button onclick="fetchPokemon()">Search</button>
-            <select id="typeFilter" onchange="fetchPokemonList()">
-                <option value="">All Types</option>
-            </select>
-            <select id="sortFilter" onchange="fetchPokemonList()">
-                <option value="id-asc">Sort: ID (Low to High)</option>
-                <option value="id-desc">Sort: ID (High to Low)</option>
-                <option value="name-asc">Sort: Name (A-Z)</option>
-                <option value="name-desc">Sort: Name (Z-A)</option>
-            </select>
-            <button id="encounterBtn">Encounter Wild Pokémon</button>
-            <select id="musicSelect">
-                <option value="off">Music: Off</option>
-                <option value="title">Main Theme</option>
-                <option value="introduction">Introduction</option>
-                <option value="littleroot">Littleroot Town</option>
-                <option value="hoenn">Journey in the Hoenn Region</option>
-                <option value="rustboro-city">Rustboro City</option>
-                <option value="gym">Gym Battle</option>
-            </select>
-            <!-- <input type="range" id="musicVolume" min="0" max="1" step="0.1" value="0.5"> -->
+    <div class="gameboy-frame">
+        <div class="screen">
+            <main>
+                <div class="search-container">
+                    <input type="text" id="pokemonInput" placeholder="Search Pokémon..." autocomplete="off">
+                    <div id="suggestions" class="suggestions"></div>
+                    <button onclick="fetchPokemon()">Search</button>
+                    <select id="typeFilter" onchange="fetchPokemonList()">
+                        <option value="">All Types</option>
+                    </select>
+                    <select id="sortFilter" onchange="fetchPokemonList()">
+                        <option value="id-asc">Sort: ID (Low to High)</option>
+                        <option value="id-desc">Sort: ID (High to Low)</option>
+                        <option value="name-asc">Sort: Name (A-Z)</option>
+                        <option value="name-desc">Sort: Name (Z-A)</option>
+                    </select>
+                    <button id="encounterBtn">Encounter Wild Pokémon</button>
+                    <select id="musicSelect">
+                        <option value="off">Music: Off</option>
+                        <option value="title">Main Theme</option>
+                        <option value="introduction">Introduction</option>
+                        <option value="littleroot">Littleroot Town</option>
+                        <option value="hoenn">Journey in the Hoenn Region</option>
+                        <option value="rustboro-city">Rustboro City</option>
+                        <option value="gym">Gym Battle</option>
+                    </select>
+                    <button id="playPauseMusicBtn">Play/Pause</button>
+                    <button id="monoToggle">Monochrome</button>
+                </div>
+                <div id="loading" class="loading">Loading...</div>
+                <section id="pokemonContainer" class="pokemon-container"></section>
+                <div class="pagination">
+                    <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+                    <button id="nextBtn" onclick="changePage(1)">Next</button>
+                </div>
+                <section class="favorites-section">
+                    <div class="favorites-controls">
+                        <button id="viewFavoritesBtn" onclick="toggleFavorites()">View Favorites</button>
+                        <button id="clearFavoritesBtn" onclick="clearFavorites()" style="display: none;">Clear Favorites</button>
+                        <button id="viewCaughtBtn">View Caught Pokémon</button>
+                        <button id="releaseAllCaughtBtn">Release All Caught</button>
+                    </div>
+                    <div id="favoritesContainer" class="pokemon-container" style="display: none;"></div>
+                    <div id="caughtContainer"></div>
+                </section>
+            </main>
         </div>
-        <div id="loading" class="loading">Loading...</div>
-        <section id="pokemonContainer" class="pokemon-container"></section>
-        <div class="pagination">
-            <button id="prevBtn" onclick="changePage(-1)">Previous</button>
-            <button id="nextBtn" onclick="changePage(1)">Next</button>
-        </div>
-        <section class="favorites-section">
-            <div class="favorites-controls">
-                <button id="viewFavoritesBtn" onclick="toggleFavorites()">View Favorites</button>
-                <button id="clearFavoritesBtn" onclick="clearFavorites()" style="display: none;">Clear Favorites</button>
-                <button id="viewCaughtBtn">View Caught Pokémon</button>
-                <button id="releaseAllCaughtBtn">Release All Caught</button>
-                <!-- <button id="encounterBtn">Encounter Wild Pokémon</button> -->
+        <div class="gameboy-buttons">
+            <div class="dpad">
+                <button class="dpad-up">↑</button>
+                <button class="dpad-down">↓</button>
+                <button class="dpad-left">←</button>
+                <button class="dpad-right">→</button>
             </div>
-            <div id="favoritesContainer" class="pokemon-container" style="display: none;"></div>
-            <div id="caughtContainer"></div>
-        </section>
-    </main>
+            <div class="ab-buttons">
+                <button class="button-a">A</button>
+                <button class="button-b">B</button>
+            </div>
+        </div>
+    </div>
     <footer>
         <p>Powered by <a href="https://pokeapi.co/" target="_blank">PokéAPI</a> | Designed Dibya Prokash Sarkar ❤️</p>
     </footer>
 
-    <!-- Modal for detailed view -->
     <div id="pokemonModal" class="modal">
         <div class="modal-content">
             <span class="close">×</span>
@@ -75,15 +88,14 @@
         </div>
     </div>
 
-    <!-- Audio element for Pokémon cries -->
-    <!-- <audio id="pokemonCry" preload="none"></audio>
-    <audio id="backgroundMusic" loop preload="auto">
-        <source src="assets/music/backgroud-song.mp3" type="audio/mp3">
-        Your browser does not support the audio element.
-    </audio> Add this -->
-
     <audio id="pokemonCry" preload="none"></audio>
     <audio id="backgroundMusic" loop preload="auto"></audio>
+    <audio id="startupSound" preload="auto">
+        <source src="https://www.pokezorworld.com/sound/GameBoy-Startup.mp3" type="audio/mp3">
+    </audio>
+    <audio id="catchSound" preload="auto">
+        <source src="https://www.pokezorworld.com/sound/PokemonRedBlue-Catch.mp3" type="audio/mp3">
+    </audio>
     <script src="script.js"></script>
 </body>
 </html>

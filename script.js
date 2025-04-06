@@ -6,15 +6,15 @@ let allPokemon = [];
 let filteredPokemon = [];
 let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 let favoritesVisible = false;
-let caughtVisible = false; // New flag for caught Pokémon visibility
+let caughtVisible = false;
 let currentPokemonData = null;
 let statsChart = null;
 let viewedPokemon = new Set(JSON.parse(localStorage.getItem('viewedPokemon')) || []);
 let caughtPokemon = new Set(JSON.parse(localStorage.getItem('caughtPokemon')) || []);
 const TOTAL_POKEMON = 151;
 let encounterTimer = null;
-let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true'; // Persist play state
-let selectedTrack = localStorage.getItem('selectedTrack') || 'off'; // Persist selected track
+let isMusicPlaying = localStorage.getItem('musicPlaying') === 'true';
+let selectedTrack = localStorage.getItem('selectedTrack') || 'off';
 
 
 // Music track options (URLs or local paths)
@@ -408,9 +408,32 @@ function startWildEncounter() {
                 caughtPokemon.add(data.id);
                 localStorage.setItem('caughtPokemon', JSON.stringify([...caughtPokemon]));
                 updateCompletionTracker();
-                encounterPopup.innerHTML = `<p>You caught ${data.name}!</p>`;
-                setTimeout(() => encounterPopup.remove(), 2000);
-                if (caughtVisible) displayCaughtPokemon(); // Refresh caught list if visible
+
+                const pokeball = document.createElement('div');
+                pokeball.classList.add('pokeball-animation');
+                encounterPopup.appendChild(pokeball);
+
+                const catchSound = document.getElementById('catchSound');
+                if (catchSound) {
+                    catchSound.currentTime = 0;
+                    catchSound.play().catch(error => console.error('Catch sound failed:', error));
+                }
+
+                anime({
+                    targets: '.pokeball-animation',
+                    translateX: ['-50%', '50%'],
+                    translateY: [0, '-100px'],
+                    rotate: 720,
+                    scale: [1, 0.5],
+                    duration: 1000,
+                    easing: 'easeInOutQuad',
+                    complete: () => {
+                        encounterPopup.innerHTML = `<p>You caught ${data.name}!</p>`;
+                        setTimeout(() => encounterPopup.remove(), 2000);
+                    }
+                });
+
+                if (caughtVisible) displayCaughtPokemon();
             });
 
             anime({
@@ -853,15 +876,18 @@ window.onload = function() {
         console.warn('Release All Caught button not found in HTML');
     }
 
-    // New: Music track selection logic
     const music = document.getElementById('backgroundMusic');
     const musicSelect = document.getElementById('musicSelect');
-    if (music && musicSelect) {
-        // Set initial state
+    const playPauseBtn = document.getElementById('playPauseMusicBtn');
+    if (music && musicSelect && playPauseBtn) {
+        const playIcon = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M8 5v14l11-7z"/></svg>';
+        const pauseIcon = '<svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M6 19h4V5H6zm8-14v14h4V5z"/></svg>';
+
         musicSelect.value = selectedTrack;
+        playPauseBtn.innerHTML = isMusicPlaying ? `${pauseIcon}<span class="sr-only">Pause Music</span>` : `${playIcon}<span class="sr-only">Play Music</span>`;
         if (selectedTrack !== 'off' && isMusicPlaying) {
             music.src = musicTracks[selectedTrack];
-            music.play().catch(error => console.error('Music playback failed:', error));
+            music.play().catch(error => console.error('Initial music playback failed:', error));
         }
 
         musicSelect.addEventListener('change', () => {
@@ -872,6 +898,7 @@ window.onload = function() {
                 music.pause();
                 music.src = '';
                 isMusicPlaying = false;
+                playPauseBtn.innerHTML = playIcon;
             } else {
                 music.src = musicTracks[selectedTrack];
                 music.play().catch(error => {
@@ -879,11 +906,46 @@ window.onload = function() {
                     alert('Could not play the selected track.');
                 });
                 isMusicPlaying = true;
+                playPauseBtn.innerHTML = pauseIcon;
             }
             localStorage.setItem('musicPlaying', isMusicPlaying);
         });
-    } else {
-        console.warn('Music or select element not found in HTML');
+
+        playPauseBtn.addEventListener('click', () => {
+            if (selectedTrack === 'off') {
+                alert('Please select a track first!');
+                return;
+            }
+            if (isMusicPlaying) {
+                music.pause();
+                playPauseBtn.innerHTML = playIcon;
+                isMusicPlaying = false;
+            } else {
+                music.play().catch(error => {
+                    console.error('Music playback failed:', error);
+                    alert('Could not play the track.');
+                });
+                playPauseBtn.innerHTML = pauseIcon;
+                isMusicPlaying = true;
+            }
+            localStorage.setItem('musicPlaying', isMusicPlaying);
+        });
+    }
+
+    document.querySelector('.dpad-up').addEventListener('click', () => alert('Up - Future feature!'));
+    document.querySelector('.dpad-down').addEventListener('click', () => alert('Down - Future feature!'));
+    document.querySelector('.dpad-left').addEventListener('click', () => changePage(-1));
+    document.querySelector('.dpad-right').addEventListener('click', () => changePage(1));
+    document.querySelector('.button-a').addEventListener('click', () => fetchPokemon());
+    document.querySelector('.button-b').addEventListener('click', () => document.getElementById('pokemonInput').value = '');
+
+    document.getElementById('monoToggle').addEventListener('click', () => {
+        document.querySelector('.screen').classList.toggle('monochrome');
+    });
+
+    const startupSound = document.getElementById('startupSound');
+    if (startupSound) {
+        startupSound.play().catch(error => console.error('Startup sound failed:', error));
     }
 
     document.querySelectorAll('button').forEach(btn => {
